@@ -1,2 +1,2 @@
 # 930LEDCode
-Team930 LED Code 2021
+Conners Team930 LED Code 2021
