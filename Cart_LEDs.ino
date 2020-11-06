@@ -41,7 +41,7 @@ void loop() {
    //Some example procedures showing how to display to the pixels:
   if(pick == 1){
   colorWipe(red, 258);
-  colorWipe(red_orange, 100);
+  colorWipe(red_orange, 100);    
   colorWipe(orange, 100);
   colorWipe(yellow_orange, 100);
   colorWipe(gold, 100);
@@ -94,7 +94,7 @@ void receiveEvent(){
  }
 
  //Fill the dots one after the other with a color
-void colorWipe(uint32_t c, uint8_t wait) {
+void colorWipe(uint32_t c, uint8_t wait) {             //What is uint8_t etc.
   for(uint16_t i=0; i<strip.numPixels(); i++) {
     strip.setPixelColor(i, c);
     strip.show();
@@ -108,7 +108,7 @@ void rainbowSteps(int wait){
   delay(1000);
   strip.fill(red_orange,4);
   strip.show();
-  delay(1000);
+  delay(1000);               //What are the delay units and how long should it be
   strip.fill(orange,8);
   strip.show();
   delay(1000);
@@ -178,7 +178,7 @@ void theaterChase(uint32_t c, uint8_t wait) {
   }
 }
 //Theatre-style crawling lights with rainbow effect
-void theaterChaseRainbow(uint8_t wait) {
+void theaterChaseRainbow(uint8_t wait) {            
   for (int j=0; j < 256; j++) {      //cycle all 256 colors in the wheel
     for (int q=0; q < 3; q++) {
       for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
@@ -194,7 +194,7 @@ void theaterChaseRainbow(uint8_t wait) {
 }
  //Input a value 0 to 255 to get a color value.
  //The colours are a transition r - g - b - back to r.
-uint32_t Wheel(byte WheelPos) {
+uint32_t Wheel(byte WheelPos) {                          //What is wheel?
   WheelPos = 255 - WheelPos;
   if(WheelPos < 85) {
     return strip.Color(255 - WheelPos * 3, 0, WheelPos * 3);
