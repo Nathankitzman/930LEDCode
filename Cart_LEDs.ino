@@ -1,182 +1,245 @@
+//Required libraries to run leds
 #include <Adafruit_DotStar.h>
 #include <SPI.h>
-#include <Wire.h>
-//Required libraries to run leds and recieve I2C data.
-#define PIN 6
-#define STRIP_NUMPIXELS 55
-//DA-Green-4
-//CL-Yellow-5
-//Parameter 1 = number of pixels in strip
-//Parameter 1 = number of pixels in strip
-//Parameter 2 = Arduino pin number (most are valid)
-//Parameter 3 = pixel type flags, add together as needed:
-Adafruit_DotStar strip(STRIP_NUMPIXELS, DOTSTAR_BGR);
-uint32_t red = strip.Color(50, 0, 0);
-uint32_t red_orange = strip.Color(50, 8, 0);
-uint32_t orange = strip.Color(50, 13, 0);
-uint32_t yellow_orange = strip.Color(50, 23, 0);
-uint32_t gold = strip.Color(50, 28, 0);
-uint32_t yellow = strip.Color(50, 50, 0);
-uint32_t yellow_green = strip.Color(28, 50, 0);
-uint32_t green = strip.Color(0, 50, 0);
-uint32_t teal = strip.Color(0, 50, 25);
-uint32_t blue = strip.Color(0, 10, 50);
-uint32_t purple = strip.Color(25, 0, 50);
-uint32_t violet = strip.Color(30, 15, 40);
-uint32_t white = strip.Color(50, 50, 50);
-uint32_t black = strip.Color(0, 0, 0);
-int pick;
-int choice;
+#include <FastLED.h>
+
+//Defined values
+#define STRIP_LEDS 60
+#define DATA_PIN 11
+
+#define DOT_STAR 1
+#define NEO_PIXEL 0
+
+#define ACTIVE_LEDS DOT_STAR
+
+#define RED_TEAM 0
+#define BLUE_TEAM 1
+//#define HUE 0
+//#define SAT 1
+//#define VAL 2
+
+//Parameter 1 = number of LEDs in the strip
+//Parameter 2 = sets order color data is sent-rearrange if colors are not correct
+//Pins are defaulted: data(green)=11; clock(yellow)=13 
+Adafruit_DotStar strip(STRIP_LEDS, DOTSTAR_BGR);
+
+//Paremeter 1 = number of LEDs in the strip
+CRGB leds[STRIP_LEDS];
+
+//Preset colors
+uint32_t red = strip.gamma32(strip.ColorHSV(0, 255, 255));
+uint32_t red_orange = strip.gamma32(strip.ColorHSV(2500, 255, 255));
+uint32_t orange = strip.gamma32(strip.ColorHSV(4000, 255, 255));
+uint32_t yellow_orange = strip.gamma32(strip.ColorHSV(7000, 255, 255));
+uint32_t gold = strip.gamma32(strip.ColorHSV(26760, 255, 255));
+uint32_t yellow = strip.gamma32(strip.ColorHSV(10800, 255, 255));
+uint32_t yellow_green = strip.gamma32(strip.Color(28, 50, 0));
+uint32_t green = strip.gamma32(strip.Color(0, 50, 0));
+uint32_t teal = strip.gamma32(strip.Color(0, 50, 25));
+int blue = strip.gamma32(strip.Color(43690, 255, 255));
+uint32_t purple = strip.gamma32(strip.Color(25, 0, 50));
+uint32_t violet = strip.gamma32(strip.Color(30, 15, 40));
+uint32_t white = strip.gamma32(strip.Color(0, 0, 255));
+uint32_t black = strip.ColorHSV(0, 0, 0);
+
+//Starts strips for use
 void setup() {
-  Wire.begin(4);                 //join i2c bus with address #4
-  Wire.begin(84);
-  Wire.onReceive(receiveEvent);  //register event
-  strip.begin();
-  strip.setBrightness(150);
-  strip.show(); 
-  
+  if (ACTIVE_LEDS == DOT_STAR) {
+    strip.begin();
+    strip.setBrightness(50);
+    strip.show(); 
+  }
+  else if (ACTIVE_LEDS == NEO_PIXEL) {
+    FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, STRIP_LEDS);
+  }
 }
+
+//Runs function specified
 void loop() {
-  pick = 1; 
-   //Some example procedures showing how to display to the pixels:
-  if(pick == 1){
-  colorWipe(red, 258);
-  colorWipe(red_orange, 100);
-  colorWipe(orange, 100);
-  colorWipe(yellow_orange, 100);
-  colorWipe(gold, 100);
-  colorWipe(yellow, 100);
-  colorWipe(yellow_green, 100);
+  preset();
+}
+
+void colorSet(int pos, uint16_t Hue, uint8_t Saturation, uint8_t Value) {
+  if (ACTIVE_LEDS == DOT_STAR) {
+    strip.setPixelColor(pos, strip.ColorHSV(Hue, Saturation, Value));
+    strip.show();
+  }
+  else if (ACTIVE_LEDS == NEO_PIXEL) {
+    leds[pos] = CHSV(Hue / 257, Saturation, Value);
+    FastLED.show();
+  }
+}
+
+void preset() {
+  for (int i=0; i< 50; i++) {
+    twoColorAnimation(purple, red, 100);
+  }
   colorWipe(green, 100);
-  colorWipe(teal, 100);
-  colorWipe(blue, 100);
-  colorWipe(purple, 100);
-  colorWipe(violet, 100);
-  colorWipe(white, 100);
+  delay(1000);
+  for (int i=0; i< 2; i++) {
+    rainbowWheel(50);
   }
-  if(pick == 2){
-  colorWipe(strip.Color(0, 50, 0), 50);  //Green
+  for (int i=0; i< 50; i++) {
+    twoColorAnimation(yellow, teal, 100);
   }
-  if(pick == 3){
-  colorWipe(strip.Color(0, 0, 50), 50);  //Blue
+  for (int i=0; i< 3; i++) {
+    movingSegment(orange, 8, 100);
   }
-  if(pick == 4){
-  theaterChase(strip.Color(5, 5, 5), 100);  //White
+  for (int i=0; i< 50; i++) {
+    theaterChase(white, 100);
   }
-  if(pick == 5){
-  theaterChase(strip.Color(25, 0, 0), 25);  //Red
-  }
-  if(pick == 6){
-  theaterChase(strip.Color(0, 0, 25), 25);  //Blue
-  }
-  if(pick == 7){
-  rainbow(20);
-  }
-  if(pick == 8){
-  rainbowCycle(20);
-  }
-  if(pick == 9){
-  theaterChaseRainbow(5);
-  }
-  
 }
-void receiveEvent(){
- while(Wire.available())
- {
-  int c = Wire.read();
-  if(c == 72){
-   choice = 1; 
-  }
-    if(c == 76){
-   choice = 2; 
-  }
-  }
- }
 
- //Fill the dots one after the other with a color
-void colorWipe(uint32_t c, uint8_t wait) {
+//Sets the strips to the alliance color
+void allianceSet(int team) {
+  if (team == RED_TEAM) {
+    colorWipe(red, 10);
+  } else if (team == BLUE_TEAM) {
+    colorWipe(blue, 10);
+  }
+}
+
+//Fill the dots one after the other with a color with a variable delay
+void colorWipe(uint32_t color, int wait) {
   for(uint16_t i=0; i<strip.numPixels(); i++) {
-    strip.setPixelColor(i, c);
+    strip.setPixelColor(i, color);
     strip.show();
     delay(wait);
   }
-}
-void rainbowSteps(int wait){
-  int colorStep = strip.numPixels();
-  strip.fill(red);
-  strip.show();
-  delay(1000);
-  strip.fill(red_orange,4);
-  strip.show();
-  delay(1000);
-  strip.fill(orange,8);
-  strip.show();
-  delay(1000);
-  strip.fill(yellow_orange,12);
-  strip.show();
-  delay(1000);
-  strip.fill(gold,16);
-  strip.show();
-  delay(1000);
-  strip.fill(yellow,20);
-  strip.show();
-  delay(1000);
-  strip.fill(yellow_green,24);
-  strip.show();
-  delay(1000);
-  strip.fill(green,28);
-  strip.show();
-  delay(1000);
-  strip.fill(teal,32);
-  strip.show();
-  delay(1000);
-  strip.fill(blue,36);
-  strip.show();
-  delay(1000);
-  strip.fill(purple,40);
-  strip.show();
-  delay(1000);
-  strip.fill(violet,44);
-  strip.show();
-  delay(1000);
 }
 
-void rainbow(uint8_t wait) {
-  uint16_t i, j;
-  for(j=0; j<256; j++) {
-    for(i=0; i<strip.numPixels(); i++) {
-      strip.setPixelColor(i, Wheel((i+j) & 255));
+//A segment moving down the length of the LED strip and continuing from the start
+void movingSegment(uint32_t color, int segLength, int wait) {
+  //Changes position one over
+  for(int i=0; i <= strip.numPixels(); i++) {
+    //Writes the length of the strip
+    for(int j=0; j < segLength; j++) {
+      //Places overflow to the beginning
+      if(j+i<strip.numPixels()) {
+        strip.setPixelColor(j + i, color);
+      } else {
+        //colorSet((j+i), ColorManagerOBJ.getColor("red")[HUE], ColorManagerOBJ.getColor("red")[SAT], ColorManagerOBJ.getColor("red")[VAL];
+        strip.setPixelColor((j + i) - strip.numPixels(), color);
+      }
     }
     strip.show();
     delay(wait);
+    strip.clear();
   }
 }
- //Slightly different, this makes the rainbow equally distributed throughout
-void rainbowCycle(uint8_t wait) {
-  uint16_t i, j;
-  for(j=0; j<256*5; j++) {  //5 cycles of all colors on wheel
-    for(i=0; i< strip.numPixels(); i++) {
-      strip.setPixelColor(i, Wheel(((i * 256 / strip.numPixels()) + j) & 255));
+
+//A segment moving down the length of the LED strip and continuing from the start
+void movingPong(uint32_t color, int segLength, int wait) {
+  //Changes position one over
+  for(int i=0; i <= strip.numPixels()-segLength; i++) {
+    //Writes the length of the strip
+    for(int j=0; j < segLength; j++) {
+      strip.setPixelColor(j + i, color);
     }
     strip.show();
     delay(wait);
+    strip.clear();
+  }
+  //changes direction
+  for(int i=0; i <= strip.numPixels(); i++) {
+    //Writes the length of the strip
+    for(int j=0; j < segLength; j++) {
+      //Places overflow to the beginning
+      if(j+i<strip.numPixels()) {
+        strip.setPixelColor(j + i, color);
+      } else {
+        strip.setPixelColor((j + i) - strip.numPixels(), color);
+      }
+    }
+    strip.show();
+    delay(wait);
+    strip.clear();
   }
 }
-//Theatre-style crawling lights.
-void theaterChase(uint32_t c, uint8_t wait) {
-  for (int j=0; j<10; j++) {  //do 10 cycles of chasing
-    for (int q=0; q < 3; q++) {
-      for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
-        strip.setPixelColor(i+q, c);    //turn every third pixel on
+
+//Alternates two colors
+void twoColorAlt(uint32_t color1, uint32_t color2) {
+  uint32_t twoColors[2] = {color1, color2};
+  //Changes between both colors
+  for(int i=0; i < strip.numPixels(); i++) {
+    strip.setPixelColor(i, twoColors[i%2]);
+  }
+  strip.show();
+}
+
+//Alternates two colors and swaps their position
+void twoColorAnimation(uint32_t color1, uint32_t color2, int wait) {
+  //Shifts pattern back and forth
+  twoColorAlt(color1, color2);
+  strip.show();
+  delay(wait);
+  twoColorAlt(color2, color1);
+  strip.show();
+  delay(wait);
+}
+
+//Theatre-style crawling lights with custom color
+void theaterChase(uint32_t color, int wait) {
+  //Shifts pattern over
+  for(int j=0; j <= 3; j++) {
+    //Fills every 3 LEDs
+    for (int i=j; i < strip.numPixels(); i+=3) {
+      strip.setPixelColor(i, color);
+    }
+    strip.show();
+    delay(wait);
+    strip.clear();
+  }
+}
+
+/*
+ * this is the start of the theaterChaseRainbow using HSV
+//Theatre-style crawling lights with rainbow effect
+void theaterChaseRainbow2(int wait) {
+  //Splits hue spectrum equally to all pixels
+  uint16_t dif = 65536/(strip.numPixels()*3);
+  //Shifts pattern over
+  for(int j=0; j <= 3; j++) {
+    //Fills every 3 LEDs
+    for (int i=j; i < strip.numPixels(); i+=3) {
+      strip.setPixelColor(i, color);
+    }
+    strip.show();
+    delay(wait);
+    strip.clear();
+        //Wraps pattern to create a "wheel"
+        if (i+k < strip.numPixels()) {
+          strip.setPixelColor(i+k, strip.ColorHSV((i*dif)+j, 255, 255));
+        } else {
+          strip.setPixelColor((i+k)-strip.numPixels(), strip.ColorHSV((i*dif)+j, 255, 255));
+        }
+  }
+}
+*/
+
+//Slightly different, this makes the rainbow equally distributed throughout
+void rainbowWheel(int wait) {
+  //Splits hue spectrum equally to all pixels
+  uint16_t dif = 65536/strip.numPixels();
+  //Shifts LEDs backwards to keep fluid motion
+  for(int k=0; k < strip.numPixels(); k++) {
+    //Adjusts color slowly
+    for(int j=0; j < dif; j+=1000) {
+      //Fills all LEDs in the strip
+      for(int i=0; i < strip.numPixels(); i++) {
+        //Wraps pattern to create a "wheel"
+        if (i-k >= 0) {
+          strip.setPixelColor(i-k, strip.ColorHSV((i*dif)+j, 255, 255));
+        } else {
+          strip.setPixelColor((i-k)+strip.numPixels(), strip.ColorHSV((i*dif)+j, 255, 255));
+        }
       }
       strip.show();
       delay(wait);
-      for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
-        strip.setPixelColor(i+q, 0);        //turn every third pixel off
-      }
     }
   }
 }
+
 //Theatre-style crawling lights with rainbow effect
 void theaterChaseRainbow(uint8_t wait) {
   for (int j=0; j < 256; j++) {      //cycle all 256 colors in the wheel
@@ -192,6 +255,7 @@ void theaterChaseRainbow(uint8_t wait) {
     }
   }
 }
+
  //Input a value 0 to 255 to get a color value.
  //The colours are a transition r - g - b - back to r.
 uint32_t Wheel(byte WheelPos) {
